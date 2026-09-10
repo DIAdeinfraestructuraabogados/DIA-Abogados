@@ -106,30 +106,51 @@ h1, h2, h3 { font-weight: 600; line-height: 1.25; margin: 0; }
 }
 .btn-relleno-acento:hover { filter: brightness(1.05); }
 
-/* --- Hero --- */
+/* --- Hero (imagen única a todo el ancho, texto encima) --- */
 .dia-hero {
+  position: relative;
   display: flex;
+  align-items: center;
   min-height: 460px;
   background: var(--dia-navy);
   color: white;
+  overflow: hidden;
 }
-.dia-hero-texto-col {
-  flex: 1 1 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.dia-hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Degradado oscuro sobre la imagen para que el texto blanco se lea */
+.dia-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 31, 56, 0.92) 0%,
+    rgba(15, 31, 56, 0.78) 42%,
+    rgba(15, 31, 56, 0.35) 72%,
+    rgba(15, 31, 56, 0.12) 100%
+  );
+}
+.dia-hero-contenido {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
   padding: 4rem 3.5rem;
 }
-.dia-hero-texto-col h1 {
+.dia-hero-contenido h1 {
   font-size: 2.3rem;
   color: white;
   margin-bottom: 1.3rem;
   max-width: 480px;
 }
 .dia-acento-texto { color: var(--dia-teal-light); }
-.dia-hero-texto { font-size: 1rem; line-height: 1.6; opacity: 0.85; margin: 0 0 2rem; max-width: 420px; }
-.dia-hero-img-col { flex: 1 1 50%; overflow: hidden; }
-.dia-hero-img-col img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 460px; }
+.dia-hero-texto { font-size: 1rem; line-height: 1.6; opacity: 0.9; margin: 0 0 2rem; max-width: 420px; }
 
 /* --- ¿Quiénes somos? --- */
 .dia-quienes-somos {
@@ -274,9 +295,15 @@ h1, h2, h3 { font-weight: 600; line-height: 1.25; margin: 0; }
 }
 
 @media (max-width: 860px) {
-  .dia-hero { flex-direction: column; }
-  .dia-hero-texto-col { padding: 3rem 1.5rem; }
-  .dia-hero-img-col img { min-height: 220px; }
+  .dia-hero-contenido { padding: 3rem 1.5rem; }
+  .dia-hero::after {
+    background: linear-gradient(
+      90deg,
+      rgba(15, 31, 56, 0.9) 0%,
+      rgba(15, 31, 56, 0.72) 60%,
+      rgba(15, 31, 56, 0.5) 100%
+    );
+  }
   .dia-quienes-somos { flex-direction: column-reverse; }
   .dia-quienes-somos-texto { padding: 3rem 1.5rem; }
   .dia-quienes-somos-img { min-height: 220px; }
@@ -299,7 +326,7 @@ h1, h2, h3 { font-weight: 600; line-height: 1.25; margin: 0; }
     gap: 0.9rem;
     margin-left: 0;
   }
-  .dia-hero-texto-col h1 { font-size: 1.7rem; }
+  .dia-hero-contenido h1 { font-size: 1.7rem; }
   .dia-especialidad-grid { grid-template-columns: 1fr 1fr; }
   .dia-footer-inner { flex-direction: column; align-items: flex-start; }
 }
