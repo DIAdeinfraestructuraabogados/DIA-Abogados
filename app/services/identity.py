@@ -36,19 +36,12 @@ class ResultadoVerificacion:
 
 
 class IdentityProvider:
-    """Interfaz que debe implementar cualquier proveedor real.
-
-    Recibe los BYTES ya descifrados de las imágenes (no una ruta de
-    archivo): en disco, foto_cedula/selfie se guardan cifradas (ver
-    app/crypto.py y app/routers/identidad.py), así que cualquier proveedor
-    real (Truora/MetaMap, que de todas formas reciben la imagen por HTTP
-    como bytes/base64, no por ruta local) debe operar sobre estos bytes.
-    """
+    """Interfaz que debe implementar cualquier proveedor real."""
 
     def verificar_identidad(
         self,
-        foto_cedula_bytes: bytes,
-        selfie_bytes: bytes,
+        foto_cedula_path: str,
+        selfie_path: str,
         numero_documento_declarado: str,
         nombre_declarado: str,
     ) -> ResultadoVerificacion:
@@ -65,12 +58,19 @@ class MockIdentityProvider(IdentityProvider):
 
     def verificar_identidad(
         self,
-        foto_cedula_bytes: bytes,
-        selfie_bytes: bytes,
+        foto_cedula_path: str,
+        selfie_path: str,
         numero_documento_declarado: str,
         nombre_declarado: str,
     ) -> ResultadoVerificacion:
         time.sleep(0.1)  # simula latencia de red hacia un proveedor real
+
+        def _hash_file(path: str) -> str:
+            try:
+                with open(path, "rb") as f:
+                    return hashlib.sha256(f.read()).hexdigest()
+            except FileNotFoundError:
+                return hashlib.sha256(path.encode()).hexdigest()
 
         return ResultadoVerificacion(
             ok=True,
@@ -79,8 +79,8 @@ class MockIdentityProvider(IdentityProvider):
             score_similitud_facial=0.94,
             proveedor="mock",
             detalle={
-                "hash_foto_cedula": hashlib.sha256(foto_cedula_bytes).hexdigest(),
-                "hash_selfie": hashlib.sha256(selfie_bytes).hexdigest(),
+                "hash_foto_cedula": _hash_file(foto_cedula_path),
+                "hash_selfie": _hash_file(selfie_path),
                 "nota": "Verificación simulada. Reemplazar por Truora/MetaMap/Registraduría en producción.",
             },
         )

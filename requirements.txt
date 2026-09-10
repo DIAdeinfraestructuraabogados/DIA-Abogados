@@ -9,7 +9,6 @@ reportlab>=4.0
 pillow>=10.0
 requests>=2.31              # WhatsApp real vía Meta Cloud API (ver app/services/notify.py)
 python-dotenv>=1.0          # carga automática de .env en desarrollo local
-cryptography>=42.0          # cifrado en reposo de datos personales y fotos de identidad (ver app/crypto.py)
 
 # --- Para verificar (demo.py usa TestClient de FastAPI) ---
 httpx>=0.27

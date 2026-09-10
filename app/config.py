@@ -24,53 +24,8 @@ BASE_DIR = Path(__file__).parent
 # no sobreescribe las que ya existan en el entorno.
 load_dotenv(BASE_DIR.parent / ".env")
 STORAGE_DIR = BASE_DIR / "storage"
-STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{(STORAGE_DIR / 'casos.db').as_posix()}")
-
-# --- Cifrado en reposo (ver app/crypto.py) ---
-# Clave simétrica única para cifrar los campos más sensibles (cédula,
-# nombre, correo, celular) y los archivos de identidad (foto de cédula,
-# selfie). Se define en la variable de entorno FIELD_ENCRYPTION_KEY
-# (generarla con: python -c "from cryptography.fernet import Fernet;
-# print(Fernet.generate_key().decode())" y ponerla en .env / en las
-# variables de entorno de Render — NUNCA en el código ni en git).
-#
-# Si no está definida (típico en un checkout local nuevo), se genera una
-# automáticamente y se guarda en app/storage/.field_key (carpeta ya
-# excluida de git) para que sobreviva a reinicios locales. En Render, si
-# no se define FIELD_ENCRYPTION_KEY explícitamente, esta clave de
-# respaldo se pierde en cada redeploy (el disco no es persistente) y los
-# datos ya cifrados quedarían ilegibles — por eso es obligatorio definirla
-# como variable de entorno real antes de manejar datos de participantes
-# reales en producción.
-_FIELD_KEY_FALLBACK_PATH = STORAGE_DIR / ".field_key"
-
-
-def _get_or_create_field_key() -> str:
-    env_key = os.environ.get("FIELD_ENCRYPTION_KEY")
-    if env_key:
-        return env_key
-
-    if _FIELD_KEY_FALLBACK_PATH.exists():
-        return _FIELD_KEY_FALLBACK_PATH.read_text().strip()
-
-    from cryptography.fernet import Fernet
-
-    nueva = Fernet.generate_key().decode()
-    _FIELD_KEY_FALLBACK_PATH.write_text(nueva)
-    import warnings
-
-    warnings.warn(
-        "FIELD_ENCRYPTION_KEY no está definida: se generó una clave local "
-        f"de desarrollo en {_FIELD_KEY_FALLBACK_PATH}. Definir "
-        "FIELD_ENCRYPTION_KEY como variable de entorno real antes de "
-        "desplegar con datos reales (ver comentario en app/config.py)."
-    )
-    return nueva
-
-
-FIELD_ENCRYPTION_KEY = _get_or_create_field_key()
 
 NOTIFY_MOCK = os.environ.get("NOTIFY_MOCK", "true").lower() == "true"
 
