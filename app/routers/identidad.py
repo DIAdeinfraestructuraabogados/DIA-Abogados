@@ -8,6 +8,7 @@ from fastapi import APIRouter, File, Request, UploadFile
 
 from app import db
 from app.config import STORAGE_DIR
+from app.crypto import encrypt_bytes
 from app.services import identity
 from app.utils import error, ip_cliente
 
@@ -31,14 +32,21 @@ async def subir_identidad(
     carpeta = STORAGE_DIR / p["id"]
     carpeta.mkdir(parents=True, exist_ok=True)
 
-    ruta_cedula = carpeta / "cedula.jpg"
-    ruta_selfie = carpeta / "selfie.jpg"
-    ruta_cedula.write_bytes(await foto_cedula.read())
-    ruta_selfie.write_bytes(await selfie.read())
+    # Se cifran en reposo (ver app/crypto.py): un acceso directo al disco o
+    # a un backup no debe poder abrir estas imágenes (cédula + selfie son
+    # exactamente el tipo de dato que se filtró en el incidente de la
+    # Secretaría de Movilidad). El nombre ".enc" deja claro que no son un
+    # .jpg abrible directamente.
+    ruta_cedula = carpeta / "cedula.enc"
+    ruta_selfie = carpeta / "selfie.enc"
+    bytes_cedula = await foto_cedula.read()
+    bytes_selfie = await selfie.read()
+    ruta_cedula.write_bytes(encrypt_bytes(bytes_cedula))
+    ruta_selfie.write_bytes(encrypt_bytes(bytes_selfie))
 
     proveedor = identity.get_identity_provider()
     resultado = proveedor.verificar_identidad(
-        str(ruta_cedula), str(ruta_selfie),
+        bytes_cedula, bytes_selfie,
         numero_documento_declarado=p["numero_documento"],
         nombre_declarado=p["nombre_completo"],
     )

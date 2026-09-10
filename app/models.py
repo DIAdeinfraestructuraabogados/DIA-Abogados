@@ -9,6 +9,7 @@ from __future__ import annotations
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
+from app.crypto import EncryptedString
 from app.database import Base
 
 
@@ -17,11 +18,16 @@ class Participante(Base):
 
     id = Column(String, primary_key=True)
     token = Column(String, unique=True, nullable=False, index=True)
-    nombre_completo = Column(String)
+    # Cifrados en reposo (ver app/crypto.py): datos personales directos que
+    # hoy no se filtran con WHERE en ninguna consulta (solo se busca por
+    # id/token, que quedan en texto plano). Si en el futuro se necesita
+    # buscar participantes por cédula/correo/celular, hace falta un campo
+    # hash aparte para el índice — no se puede hacer WHERE = sobre esto.
+    nombre_completo = Column(EncryptedString)
     tipo_documento = Column(String, default="CC")
-    numero_documento = Column(String)
-    email = Column(String)
-    celular = Column(String)
+    numero_documento = Column(EncryptedString)
+    email = Column(EncryptedString)
+    celular = Column(EncryptedString)
     estado = Column(String, default="invitado")
     foto_cedula_path = Column(String)
     selfie_path = Column(String)
@@ -47,8 +53,8 @@ class Comparendo(Base):
     placa = Column(String)
     tipo_vehiculo = Column(String)
     secretaria_transito_id = Column(Integer, ForeignKey("secretarias_transito.id"))  # cuál de las 37 secretarías impartió el comparendo
-    titular_nombre = Column(String)  # puede diferir del participante (vehículo de un tercero/empresa)
-    titular_documento = Column(String)
+    titular_nombre = Column(EncryptedString)  # puede diferir del participante (vehículo de un tercero/empresa)
+    titular_documento = Column(EncryptedString)
     creado_en = Column(String)
 
     participante = relationship("Participante", back_populates="comparendos")
