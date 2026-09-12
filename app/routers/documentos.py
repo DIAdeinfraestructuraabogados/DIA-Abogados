@@ -173,7 +173,17 @@ def verificar_otp(token: str, body: VerificarOtpBody, request: Request):
     # cuando la opción 1 falla o expira sin confirmación.
     # -----------------------------------------------------------
     p_actualizado = db.obtener_participante(p["id"])
-    intento_remision = remision.iniciar_cascada(p_actualizado)
+    # Igual que la copia de cortesía arriba: un fallo del proveedor en la
+    # opción 1 de la cascada (ej. WhatsApp real sin credenciales todavía
+    # configuradas, o caído) NO debe tumbar la respuesta de la firma, que
+    # ya es válida y quedó guardada antes de este punto. El resto de la
+    # cascada (opciones 3 y 2) sigue disponible desde los endpoints de
+    # remision.py aunque esta primera opción haya fallado.
+    try:
+        intento_remision = remision.iniciar_cascada(p_actualizado)
+    except Exception:
+        db.registrar_evento(p["id"], "remision_opcion1_fallida", canal="whatsapp_boton")
+        intento_remision = {"id": None, "estado": "fallido"}
 
     # -----------------------------------------------------------
     # Disparado por el MISMO evento (firma + poder + OTP verificados):
